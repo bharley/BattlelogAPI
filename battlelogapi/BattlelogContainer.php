@@ -46,8 +46,8 @@ abstract class BattlelogContainer implements ArrayAccess
 	protected $_loaders = array();
 	
 	/**
-	 * Stores the API and the ID. Will not load the container's data until accessed
-	 * or lazy loading is disabled.
+	 * Stores the API. Will not load the container's data until accessed or lazy
+	 * loading is disabled.
 	 * 
 	 * @since  1.3
 	 * @param  BattlelogApi $api
@@ -63,7 +63,7 @@ abstract class BattlelogContainer implements ArrayAccess
 		}
 		
 		$this->_api = $api;
-		$this->_initLoaders();
+		$this->_init();
 		
 		if ($load)
 		{
@@ -72,13 +72,36 @@ abstract class BattlelogContainer implements ArrayAccess
 	}
 	
 	/**
-	 * This method should set up all of the loaders for this container. All of
-	 * the loaders will be iterated over when this class is loaded.
+	 * This method is a convenient place to do construction-type actions without
+	 * actually having to override the constructor and copy the method
+	 * signature.
 	 * 
-	 * @since    2.0
-	 * @abstract
+	 * @since 2.0
 	 */
-	abstract protected function _initLoaders();
+	protected function _init()
+	{
+		// Intentionally left blank
+	}
+	
+	/**
+	 * Adds the list of loads to the loaderlist for this class.
+	 * 
+	 * @since  2.0
+	 * @param  array $loaders The loaders to add
+	 * @throws BattlelogException 
+	 */
+	protected function _addLoaders($loaders)
+	{
+		if (!is_array($loaders))
+		{
+			throw new BattlelogException('Loaders must be of type array');
+		}
+		
+		foreach ($loaders as $loader)
+		{
+			$this->_addLoader($loader);
+		}
+	}
 	
 	/**
 	 * Adds the given loader to the list of loaders.
@@ -112,11 +135,11 @@ abstract class BattlelogContainer implements ArrayAccess
 		
 		if ($this->_data === null)
 		{
-			$data = array();
+			$this->_data = array();
 			
 			foreach ($this->_loaders as $loader)
 			{
-				$data = array_merge($data, $loader->getData());
+				$this->_data = array_merge($this->_data, $loader->getData($force));
 			}
 		}
 	}
@@ -254,6 +277,12 @@ abstract class BattlelogLoader
 	protected $_api = null;
 	
 	/**
+	 * @since 2.0
+	 * @var   array
+	 */
+	protected $_data = null;
+	
+	/**
 	 * Creates a new loader instance using the given uri identification and API
 	 * instance.
 	 * 
@@ -312,19 +341,30 @@ abstract class BattlelogLoader
 	 * Returns the parsed contents of the page this loader is responsible for.
 	 * 
 	 * @since  2.0
+	 * @param  boolean $force Whether to override the data cache or not
 	 * @return array The values parsed from this location
 	 * @throws BattlelogException If the API hasn't been set yet
 	 */
-	public function getData()
+	public function getData($force)
 	{
 		if (!$this->_api)
 		{
 			throw new BattlelogException('API not set');
 		}
 		
-		$uri = str_replace('[[ID]]', $this->_id, $this->_uri);
-		$data = $this->_api->getUri($uri);
+		if ($force)
+		{
+			$this->_data = null;
+		}
 		
-		return $this->_parse($data);
+		if (!$this->_data)
+		{
+			$uri = str_replace('[[ID]]', $this->_id, $this->_uri);
+			$data = $this->_api->getUri($uri);
+			
+			$this->_data = $this->_parse($data);
+		}
+		
+		return $this->_data;
 	}
 }

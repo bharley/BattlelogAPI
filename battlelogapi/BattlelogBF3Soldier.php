@@ -26,13 +26,23 @@
 class BattlelogBF3Soldier extends BattlelogContainer
 {
 	/**
-	 * Adds the loader for general player information
+	 * Stores the API and the ID. Will not load the container's data until accessed
+	 * or lazy loading is disabled.
 	 * 
-	 * @see BattlelogContainer::_initLoaders()
+	 * @since  2.0
+	 * @param  BattlelogApi $api
+	 * @param  string $id The id for this soldier
+	 * @param  bool $load Whether or not to load the data contents right away
+	 * @see    BattlelogContainer::__construct()
 	 */
-	protected function _initLoaders()
+	public function __construct($id, $api, $load = false)
 	{
+		// Create a loader for this ID
+		$loader = new BattlelogBF3SoldierOverviewLoader($id);
+		$this->_addLoader($loader);
 		
+		// Do parent things
+		parent::__construct($api, $load);
 	}
 }
 
@@ -53,6 +63,14 @@ class BattlelogBF3SoldierOverviewLoader extends BattlelogLoader
 	protected function _init()
 	{
 		// Set the URI
-		$this->_uri = '';
+		$this->_uri = 'bf3/overviewPopulateStats/[[ID]]/None/1/';
+	}
+	
+	/**
+	 * @see BattlelogLoader::_parse()
+	 */
+	protected function _parse($data)
+	{
+		echo $data; exit;
 	}
 }
