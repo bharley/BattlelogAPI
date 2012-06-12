@@ -121,6 +121,50 @@ abstract class BattlelogContainer implements ArrayAccess
 	}
 	
 	/**
+	 * Checks to see if this class as the given loader attached to it.
+	 * 
+	 * @sinrce 2.0
+	 * @param  string $loaderName
+	 * @return boolean 
+	 */
+	protected function _hasLoader($loaderName)
+	{
+		foreach ($this->_loaders as $loader)
+		{
+			if (get_class($loader) == $loaderName)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * This method uses some string manipulation to "magically" add loaders by
+	 * name.
+	 * 
+	 * @since  2.0
+	 * @param  type $loaderName The name of the loader to attach
+	 * @param  type $options The constructor options to pass to this new loader
+	 * @throws BattlelogException
+	 */
+	protected function _addNamedLoader($loaderName, $options)
+	{
+		$loaderClass = get_class($this) . ucfirst($loaderName) . 'Loader';
+		
+		if (!class_exists($loaderClass))
+		{
+			throw new BattlelogException("There is no loader of type $loaderClass");
+		}
+		
+		$reflector = new ReflectionClass($loaderClass);
+		$loader = $reflector->newInstanceArgs($options);
+		
+		$this->_addLoader($loader);
+	}
+
+	/**
 	 * Loads the data into the container.
 	 * 
 	 * @since  1.3
@@ -142,25 +186,6 @@ abstract class BattlelogContainer implements ArrayAccess
 				$this->_data = array_merge($this->_data, $loader->getData($force));
 			}
 		}
-	}
-	
-	/**
-	 * Since PHP <5.3 doesn't support ternary operators without the middle paramter,
-	 * I've created this silly little helper method to cut down on code duplication.
-	 * Esentially, this method will return $return if $var is null. Otherwise it will
-	 * return $var.
-	 * 
-	 * @since  1.3
-	 * @param  mixed $var The value to short ternary against
-	 * @param  mixed $return The return in the case that $var is null
-	 * @return mixed The value of $var if it's not null, otherwise returns the value of $return
-	 */
-	protected function _ternShort($var, $return = 0)
-	{
-		if ($var == null)
-			return $return;
-		
-		return $var;
 	}
 	
 	/**
@@ -366,5 +391,24 @@ abstract class BattlelogLoader
 		}
 		
 		return $this->_data;
+	}
+	
+	/**
+	 * Since PHP <5.3 doesn't support ternary operators without the middle paramter,
+	 * I've created this silly little helper method to cut down on code duplication.
+	 * Esentially, this method will return $return if $var is null. Otherwise it will
+	 * return $var.
+	 * 
+	 * @since  2.0
+	 * @param  mixed $var The value to short ternary against
+	 * @param  mixed $return The return in the case that $var is null
+	 * @return mixed The value of $var if it's not null, otherwise returns the value of $return
+	 */
+	protected function _ternShort($var, $return = 0)
+	{
+		if ($var == null)
+			return $return;
+		
+		return $var;
 	}
 }

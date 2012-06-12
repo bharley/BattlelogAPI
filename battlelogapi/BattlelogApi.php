@@ -44,6 +44,12 @@ class BattlelogApi
 	protected $_useGzip = true;
 	
 	/**
+	 * @since 1.3
+	 * @var   BattlelogLanguage
+	 */
+	protected $_lang = null;
+	
+	/**
 	 * Sets up autoloading.
 	 * 
 	 * @since 1.0-beta
@@ -52,6 +58,9 @@ class BattlelogApi
 	{
 		// Register our autoloader function with PHP
 		spl_autoload_register(array($this, 'autoload'));
+		
+		// Start the language translation class
+		$this->_lang = new BattlelogLanguage($this);
 	}
 	
 	/**
@@ -63,7 +72,7 @@ class BattlelogApi
 	 */
 	public function getBF3Soldier($soldierId)
 	{
-		
+		return new BattlelogBF3Soldier($soldierId, $this);
 	}
 	
 	/**
@@ -91,8 +100,18 @@ class BattlelogApi
 	 */
 	protected function _curi($uri)
 	{
+		// Although we claim to only deal with URIs, we also accept URLs
+		if (strpos($uri, 'http') === 0)
+		{
+			$url = $uri;
+		}
+		else
+		{
+			$url = "http://battlelog.battlefield.com/$uri";
+		}
+		
 		// Initialize and set cUrl options
-		$curl = curl_init("http://battlelog.battlefield.com/$uri");
+		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
 			'Expect:',
 			'User-Agent: ' . BLA_USER_AGENT,
@@ -131,6 +150,19 @@ class BattlelogApi
 	}
 	
 	/**
+	 * Runs the given nameplate through the BF3 locale file to get the actual
+	 * name of the item.
+	 * 
+	 * @param  string $string The nameplate to run through the translator
+	 * @return mixed The translated id
+	 * @since  1.3
+	 */
+	public function translate($string)
+	{
+		return $this->_lang[$string];
+	}
+	
+	/**
 	 * This method will get registered as an autoloader with PHP so that the
 	 * BattlelogApi can be successfully executed by only including one file.
 	 * This could also decrease file access if you use this instead of including
@@ -148,7 +180,7 @@ class BattlelogApi
 			return;
 		}
 		
-		include __DIR__ . $classname .'.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . $classname .'.php';
 	}
 }
 
