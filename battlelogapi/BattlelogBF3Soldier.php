@@ -202,7 +202,6 @@ class BattlelogBF3SoldierAwardsLoader extends BattlelogLoader
 		
 		$ribbons = $data['data']['awards']['AwardGroup_Ribbons'];
 		$medals = $data['data']['awards']['AwardGroup_Medals'];
-		$locale = $data['data']['bf3GadgetsLocale']['awards'];
 		
 		$result = array();
 		$result['ribbons'] = array();
@@ -212,12 +211,13 @@ class BattlelogBF3SoldierAwardsLoader extends BattlelogLoader
 		{
 			$id = (int) substr($ribbon['unlockId'], 1);
 			$result['ribbons'][$id] = array(
-				'id'       => $id,
-				'unlockId' => $ribbon['unlockId'],
-				'name'     => $this->_api->translate($locale[$ribbon['unlockId']]['name']),
-				'taken'    => $ribbon['unlocked'] == 100 ? true: false,
-				'amount'   => (int) $ribbon['actualValue'],
-				'image' => array(
+				'id'          => $id,
+				'unlockId'    => $ribbon['unlockId'],
+				'name'        => $this->_api->translate($ribbon['award']['stringID']),
+				'description' => $this->_api->translate($ribbon['award']['descriptionID']),
+				'unlocked'    => ($ribbon['unlocked'] == 100),
+				'amount'      => (int) $ribbon['timesTaken'],
+				'image'       => array(
 //					'small'  => BattlelogUtils::getRibbonImage($id, 'small'),
 //					'medium' => BattlelogUtils::getRibbonImage($id, 'medium'),
 //					'large'  => BattlelogUtils::getRibbonImage($id, 'large')
@@ -229,12 +229,13 @@ class BattlelogBF3SoldierAwardsLoader extends BattlelogLoader
 		{
 			$id = (int) substr($medal['unlockId'], 1);
 			$result['medals'][$id] = array(
-				'id'       => $id,
-				'unlockId' => $medal['unlockId'],
-				'name'     => $this->_api->translate($locale[$medal['unlockId']]['name']),
-				'taken'    => $medal['unlocked'] == 100 ? true: false,
-				'amount'   => (int) $medal['actualValue'],
-				'image' => array(
+				'id'          => $id,
+				'unlockId'    => $medal['unlockId'],
+				'name'        => $this->_api->translate($medal['award']['stringID']),
+				'description' => $this->_api->translate($medal['award']['descriptionID']),
+				'unlocked'    => ($medal['unlocked'] == 100),
+				'amount'      => (int) $medal['timesTaken'],
+				'image'       => array(
 //					'small'  => BattlelogUtils::getMedalImage($id, 'small'),
 //					'medium' => BattlelogUtils::getMedalImage($id, 'medium'),
 //					'large'  => BattlelogUtils::getMedalImage($id, 'large')
